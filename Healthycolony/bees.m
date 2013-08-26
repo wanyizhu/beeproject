@@ -49,21 +49,34 @@ Factorstore=6;
 % The colony pollen demand includes the need of egg, larval, nurse and house bee stage. 
 % We assume the daily demand of pollen of bees is constant stage-specific parameters.
 PollenDemand= a1*stage(1)+a2*stage(2)+a4*stage(4)+a5*stage(5); 
+HoneyDemand = h1*stage(1)+h2*stage(2)+h4*stage(4)+h5*stage(5)+h6*stage(6);
 
-if PollenDemand <= 0
-    disp('PollenDemand leq zero, dead hive')
+if PollenDemand | HoneyDemand <= 0
+    disp('PollenDemand or HoneyDemand leq zero, dead hive')
 end
 
 % the level of the pollen stores in relation to the demand situation of the colony.
-Indexpollen = min(1,Pt/(PollenDemand*Factorstore));
-%max(0,min(1,Pt/(PollenDemand*Factorstore+1)));
+%got rid of +1s in the denominators
+Indexpollen = max(0,min(1,Pt/(PollenDemand*Factorstore)));
+Indexhoney = max(0,min(1,Ht/(HoneyDemand)));
 
 %the level of the active nurse bees population in relation to the total nursing demand of all brood stages.
-IndexNursing = max(0,min(1,stage(4)/((stage(2)+stage(1))*FactorBroodNurse+1))); 
+IndexNursing = max(0,min(1,stage(4)/((stage(2)+stage(1))*FactorBroodNurse))); 
 
 
-%% Bee Dynamics 
-survivorship = zeros(agemax,1);
+%% Bee Dynamics : Everyone ages by one day
+%except for the larva, these are all totally independant of what is going on in the hive.
+%In the older model version, there were effects of food availability, as
+%follows:
+% survivorship(1:3) = mt1; 
+% survivorship(4:11) = mt2*( 1 - max(0,1- Pt/(a2*stage(2))));
+% survivorship(12:26) = mt3; 
+% survivorship(27:42) = mt4* ( 1 - max(0,1- Pt/(a4*stage(4))-Ht/(h4*stage(4)))); 
+% survivorship(43:48) = mt5* ( 1 - max(0,1- Ht/(h5*stage(5))));
+% survivorship(49:agemax,1) = (1-v)*mt6;
+% survivorship = zeros(agemax,1);
+%going off of the above, I am changing the survivorships below to reflect
+%these ideas using Indexpollen and Indexhoney
 
 survivorship(1:3) = st1^(1/3); % the daily survival rate of egg stage at age(i=1-3) 
 
@@ -78,19 +91,25 @@ survivorship(4:11) = (st2*min(1,max(0,1-0.15*(1-Indexpollen*IndexNursing))))^(1/
 % rate and the cannibalism factor. 0.15--the time-independent base
 % cannibalism mortality rate for larval stage. 
 
-survivorship(11:12)=tlp*survivorship(10); %stage transition rate LARVA to PUPA
+%stage transition rate LARVA to PUPA
+survivorship(11:12)=tlp*survivorship(10); 
 
-survivorship(12:26)= st3^(1/15); % PUPA: st3 is overal stage survival, cummulative over 15 days
+% PUPA: st3 is overal stage survival, cummulative over 15 days
+survivorship(12:26)= st3^(1/15); 
 
-survivorship(26:27)=tpn*survivorship(25); % stage transition rate PUPA to NURSE bee
+% stage transition rate PUPA to NURSE bee
+survivorship(26:27)=tpn*survivorship(25); 
 
-survivorship(27:42)= (1-u)*st4^(1/16); % NURSE: who don't precociously forage (1-u) and who survive one day of 16 that make up st4
-
-survivorship(42:43)=tnh*survivorship(41); %stage transition rate NURSE to HOUSE bee
-%It will be varied by the nursing efforts. The higher the nursing load will
+% NURSE: who don't precociously forage (1-u) and who survive one day of 16 that make up st4
+%It will be varied by the nursing efforts. A higher nursing load will
 %cause a higher mortality of the nurse bee stage.
- 
-survivorship(43:48)= st5^(1/6); %survivorship of HOUSE bee
+survivorship(27:42)= (1-u)*(st4*min(1,1-Indexpollen-Indexhoney))^(1/16); 
+
+%stage transition rate NURSE to HOUSE bee
+survivorship(42:43)=tnh*survivorship(41); 
+
+%survivorship of HOUSE bee
+survivorship(43:48)= (st5*min(1,1-Indexhoney))^(1/6); 
 
 survivorship(48:49)=thf*survivorship(47);
 
@@ -99,34 +118,34 @@ survivorship(49:agemax,1)= (1-v)*st6^(1/12); % v is reversed probability of the 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Everything here just relates to storage and matrix multiplication.
 
-theta = rt*ones(agemax-1,1); % theta = probabilities of retarded development at each stage
-%all zeros right now
+        theta = rt*ones(agemax-1,1); % theta = probabilities of retarded development at each stage
+        %all zeros right now
 
-% A is a matrix that stores the survival rate for each stage
-A = (diag(1-theta,-1)+diag([0;theta]))*diag(survivorship);
+        % A is a matrix that stores the survival rate for each stage
+        A = (diag(1-theta,-1)+diag([0;theta]))*diag(survivorship);
 
-B=zeros(agemax);% the precocious development of nurse bees 
-B(49,27:42)=u*ones(1,16);
+        B=zeros(agemax);% the precocious development of nurse bees 
+        B(49,27:42)=u*ones(1,16);
 
-C=zeros(agemax);
-C(27,49:agemax)= v*ones(1,12); % the retarded development of forager bees 
-transit=A+B+C; 
+        C=zeros(agemax);
+        C(27,49:agemax)= v*ones(1,12); % the retarded development of forager bees 
+        transit=A+B+C; 
 
-Nt1= transit*Nt; % structured dynamics for bees 
+        Nt1= transit*Nt; % structured dynamics for bees 
 
-%% Pollen dynamics-field season 
+%% Food is consumed, new eggs are layed
 
 % pollen consumption of egg, larval, nurse and house bee stage
-foodeaten =  min([Pt,a1*stage(1)+a2*stage(2)+a4*stage(4)+a5*stage(5)]); 
+foodeaten =  min(Pt,PollenDemand); 
 
 % The removal of dead brood, hygenic behavior gives total number of scavanged cells
 scavangedcells = Nt(1:26)'*(1-survivorship(1:26));
 
 % honey consumption of larval, nurse, house and forager bee stage
-honeyeaten= min([Ht,h1*stage(1)+h2*stage(2)+h4*stage(4)+h5*stage(5)+h6*stage(6)]); 
+honeyeaten= min(Ht, HoneyDemand); 
 
 % Empty Cells due to the cleaned food cells and adult emergence
-vacated = Nt(26) + foodeaten+honeyeaten;
+vacated = Nt(26) + foodeaten + honeyeaten;
 
 %Actual eggs layed by queen this day determined here
 if stage(4)+stage(5)+stage(6)<= 0 % the minimum requirement of number of bees needed to be around a queen bee
@@ -144,69 +163,83 @@ else
     %the only cap on the egg laying right now is the 
 end 
 
+%UPDATE VACANT CELL COUNT
+Vt = Vt + vacated + scavanged - R ;
+    if Vt == 0
+            disp('ran out of space after eggs laid')
+            disp(date)
+    end
+
+%% POLLEN FORAGING- field season
+
 % Pollen foraging feedback mechanism: pollen foraging is regulated
 % according to the current pollen demand, which is the amount of pollen
 % need for each stage and reserve for next 6 days (Factorstore) need minus
 % to current pollen storage.
-PollenNeed=max(0,(a1*stage(1)+a2*stage(2)+a4*stage(4)+a5*stage(5))*Factorstore-Pt); % 
-NeedPollenForager=PollenNeed/0.48; %0.48 is how much pollen each forager can gather in a day- should be a variable, not hard coded
+PollenNeed=max(0,PollenDemand*Factorstore-Pt);
 
-PollenForager=max(stage(6)*0.01, min(NeedPollenForager,stage(6)*0.33)); %%THIS one seems like the right one! with the 33% cap!
-%PollenForager=min(stage(6),max(stage(6)*0.01, NeedPollenForager));
- 
-% Weidenmuller and Tautz (2002) showed that in times of different pollen need, the colony responds with a different number of pollen foragers but does not change the overall flight activity or the total number of all foragers (pollen and nectar). 
 % 0.48 is the pollen collected each day each forager, based on the amount
 % of pollen collected per foraging trip(0.06 cellful pollen,Camazine et
 % al., 1990), the average foraging trips performed per forager per day(10 trips per day) and the stochastic factor for each pollen
-% forager to make a successful foraging trip(80%). 
+% forager to make a successful foraging trip(80%)
+foragingsuccess = 0.48;
+
+%Number of pollen foragers to recruit
+NeedPollenForager=PollenNeed/foragingsuccess; 
+
 % In nature, there is always a certain minimum number of pollen foragers
 % within the cohort of foragers (1% forager will have the preference to
 % make pollen foraging), even when there is almost no pollen need (personal
 % observation). The maximum number of pollen foragers is 33% of the current
 % cohort of foragers. 
+PollenForager=max(stage(6)*0.01, min(NeedPollenForager,stage(6)*0.33)); %%THIS one seems like the right one! with the 33% cap!
+%PollenForager=min(stage(6),max(stage(6)*0.01, NeedPollenForager));
 
 % pollen storage depends on the available cells in the hive
 % and the foraging collection efficiency of the pollen forager---assumption for pollen foraging behavior
 storedfood = max( 0, min([PollenForager*0.48,Vt+vacated+scavangedcells-R]));
+
+%UPDATE VACANT CELL COUNT
+Vt = Vt - storedfood ;
+    if Vt == 0
+            disp('ran out of space after food stored')
+            disp(date)
+    end
 
 %% Honey dynamics-field season 
 % Reference: Edwards and Myerscough 2011 , nectarODE.m called here
 % nectar collection is based on the interaction of current nectar forager and the house bees 
 % Nectar being processed into honey is reduced in volume by a factor .4
  
-if stage (6)<=1 
+if stage(6) <= 1 
     disp('no foragers'); %I don't see why this is here... shouldn't house bees just take over this role?
-    predictedhoney=0;   
-    
-else   
+    predictedhoney=0;    
+else
+    %volume ratio of honey/nectar = 0.4
     predictedhoney = 0.4 * interp2(hsurfX,hsurfY,hsurf,0.8*stage(5),stage(6)-PollenForager);
-    if predictedhoney == 0
-        disp('interp function said no honey')
-    end
-    storedhoney = predictedhoney; % max( 0, min(predictedhoney, Vt+vacated+scavangedcells-R-storedfood));
-    if storedhoney == 0
-        disp('no honey stored, ran out of space')
-    end
-    %if R+storedfood>Vt+vacated+scavangedcells, then no honey will be stored
+        if predictedhoney == 0
+            disp('interp function said no honey')
+        end
+
 end
     
+storedhoney = max( 0, min(predictedhoney, Vt));
+
+    
+%UPDATE VACANT CELL COUNT
+Vt = Vt - storedhoney ;
+    if Vt == 0
+            disp('ran out of space after honey stored')
+            disp(date)
+    end
    
 %% Pollen, Honey, Cells net input 
-Pt1 = max(0, Pt- foodeaten + storedfood); % Updated pollen stores at end of day
-Ht1 = min(V0,Ht-honeyeaten+storedhoney); % Updated honey stores at end of day
-Vt1 = max(0, Vt-stage(1)-stage(2)-stage(3)-Pt1-Ht1); % Vacant cells at end of the day
+Pt1 = max(0, Pt - foodeaten + storedfood); % Updated pollen stores at end of day
+Ht1 = min(V0, Ht - honeyeaten + storedhoney); % Updated honey stores at end of day, capped by total size of hive
+Vt1 = Vt; % Vacant cells at end of the day - gets updated throughout file  
+
 Nt1(1) = R; %number of eggs laid today, these are now the age zero eggs
 
 nextstate = [ Vt1; Pt1; Ht1; R; Nt1 ];  
 
 return
-
-
-
-
-
-
-
-
-
-
