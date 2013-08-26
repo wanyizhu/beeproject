@@ -17,12 +17,12 @@ global hsurfX hsurfY hsurf V0; % the interpolated surface of NectarODE and honey
 
  %% Stage Structure for field season bees-normal cycle: nonlinearities.1=egg,2=larvae,3=pupae,4=nurse,5=house,6=forager
 s = zeros(6,agemax);
-s(1,1:3)=1;% 
-s(2,4:11)=1;
-s(3,12:26)=1;
-s(4,27:42)=1;
-s(5,43:48)=1;
-s(6,49:agemax)=1;
+s(1,1:3) = 1;% 
+s(2,4:11) = 1;
+s(3,12:26) = 1;
+s(4,27:42) = 1;
+s(5,43:48) = 1;
+s(6,49:agemax) = 1;
 
 %% Current conditions in bee hive %%%%%%%%
 Vt = state(1); % vacant cells 
@@ -50,11 +50,16 @@ Factorstore=6;
 % We assume the daily demand of pollen of bees is constant stage-specific parameters.
 PollenDemand= a1*stage(1)+a2*stage(2)+a4*stage(4)+a5*stage(5); 
 
+if PollenDemand <= 0
+    disp('PollenDemand leq zero, dead hive')
+end
+
 % the level of the pollen stores in relation to the demand situation of the colony.
-Indexpollen=max(0,min(1,Pt/(PollenDemand*Factorstore+1)));
+Indexpollen = min(1,Pt/(PollenDemand*Factorstore));
+%max(0,min(1,Pt/(PollenDemand*Factorstore+1)));
 
 %the level of the active nurse bees population in relation to the total nursing demand of all brood stages.
-IndexNursing=max(0,min(1,stage(4)/((stage(2)+stage(1))*FactorBroodNurse+1))); 
+IndexNursing = max(0,min(1,stage(4)/((stage(2)+stage(1))*FactorBroodNurse+1))); 
 
 
 %% Bee Dynamics 
@@ -95,6 +100,7 @@ survivorship(49:agemax,1)= (1-v)*st6^(1/12); % v is reversed probability of the 
 %Everything here just relates to storage and matrix multiplication.
 
 theta = rt*ones(agemax-1,1); % theta = probabilities of retarded development at each stage
+%all zeros right now
 
 % A is a matrix that stores the survival rate for each stage
 A = (diag(1-theta,-1)+diag([0;theta]))*diag(survivorship);
@@ -133,7 +139,9 @@ else
     % added later!
     %Vt+vacated+scavanged cells gives how many cells are allocated to 
     %R = min([qh*maxProduction,stage(4)*FactorBroodNurse,Vt+vacated+scavangedcells]);
-    R = min(Vt+vacated+scavangedcells,qh*maxProduction); %qh is set to 1 currently- simplified, always max production
+    %qh is set to 1 currently- simplified, always max production
+    R = min(Vt+vacated+scavangedcells,qh*maxProduction); 
+    %the only cap on the egg laying right now is the 
 end 
 
 % Pollen foraging feedback mechanism: pollen foraging is regulated
@@ -184,26 +192,14 @@ end
     
    
 %% Pollen, Honey, Cells net input 
-Pt1 = max(0, Pt- foodeaten + storedfood); % The net pollen storage at the end of the day 
-Ht1 = min(V0,Ht-honeyeaten+storedhoney); % The net honey storage at the end of the day. 
-Vt1 = max(0, Vt-stage(1)-stage(2)-stage(3)-Pt1-Ht1); % Net vacant cells at end of the day
-Nt1(1) = R; %number of eggs laid, these are now the age zero eggs
+Pt1 = max(0, Pt- foodeaten + storedfood); % Updated pollen stores at end of day
+Ht1 = min(V0,Ht-honeyeaten+storedhoney); % Updated honey stores at end of day
+Vt1 = max(0, Vt-stage(1)-stage(2)-stage(3)-Pt1-Ht1); % Vacant cells at end of the day
+Nt1(1) = R; %number of eggs laid today, these are now the age zero eggs
 
 nextstate = [ Vt1; Pt1; Ht1; R; Nt1 ];  
 
 return
-
-%shouldn't Vt1 = Vt- NEW filled cells? not net?
-
-
-
-
-
-
-
-
-
-
 
 
 
