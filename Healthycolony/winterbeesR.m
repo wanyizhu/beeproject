@@ -20,16 +20,12 @@ s(4,27:agemaxwinter) = 1; %  test to combine the all the adult bees into one sta
 
 
 %% Abnormal developmental.(precocious+delayed development in bees)
-u = 0.0;%precocious prob
-v = 0.0;% reversed prob. between foragers and house bees;
-theta = 0.00*ones(agemaxwinter-1,1); % theta = probabilities of development retardation
+u = 0;%precocious prob
+v = 0;% reversed prob. between foragers and house bees;
+theta = 0*ones(agemaxwinter-1,1); % theta = probabilities of development retardation
 
 %% Hive Dynamics%
 %%%% Empty Cell+Pollen Cells + Honey Cells+Brood Cells =Hive Space
-
-% Queen reproduction potential %%%empirical function 
-relativedate = mod(date,360);
-%maxProduction = (0.0000434)*(relativedate)^4.98293*exp(-0.05287*relativedate);
 
 %%%% Current conditions in bee hive 
 Vt = state(1); % vacant cells 
@@ -53,10 +49,9 @@ else
 %     survivorship(4:11) = max(0, overall_P*( 1 - max(0,1- Pt/(a2*stage(2))))); % Larval survival depends on the intrinsic mortality and pollen availibility 
 %     survivorship (12:26) = max( 0, overall_P* ( 1 - max(0,1-Ht/(0.022*stage(4)))));
 %     survivorship(27:agemaxwinter)= max( 0, overall_P* ( 1 - max(0,1-Ht/(0.022*stage(4))))); % the survival of the adult bees in the hive depends on the intrisic mortality and the food availibility 
-survivorship (1:3) = overall_P;
-survivorship(4:11) = overall_P; % Larval survival depends on the intrinsic mortality and pollen availibility 
-survivorship (12:26) = overall_P;
-survivorship(27:agemaxwinter)= overall_P; % the survival of the adult bees in the hive depends on the intrisic mortality and the food availibility 
+
+survivorship (1:agemaxwinter) = overall_P;
+
 end 
 
 A = (diag(1-theta,-1)+diag([0;theta]))*diag(survivorship);
@@ -75,16 +70,14 @@ scavangedcells = Nt(1:26)'*(1-survivorship(1:26));
 
 %there should be NO egg laying in winter. The last eggs layed in summer are
 %super long-lived. this just sits in the survivorship function.
-% if stage(4)>=0  %really, should be a better bound, but lets leave it for now
-%     R = max( 0, min([maxProduction,stage(4)*5,Vt+vacated+scavangedcells]));% Egg input 
-% else 
-     R=0; 
-% end 
+R=0; 
+
+
 %%%%%%%%%Pollen, Honey, Cells net input%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Pt1 = Pt - polleneaten;  % The net pollen storage at the end of the day 
 Ht1 = Ht - honeyeaten; % The net honey storage at the end of the day. 
 Vt1 = Vt + vacated - R + scavangedcells; % The net vacant cells 
-Nt1(1) = R; 
+Nt1(1) = 1; %R; 
 nextstate = [ Vt1; Pt1; Ht1; R; Nt1 ];
 
 return
