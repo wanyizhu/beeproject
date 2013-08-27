@@ -82,7 +82,8 @@ survivorship(1:3) = st1^(1/3); % the daily survival rate of egg stage at age(i=1
 
 survivorship(3:4) =tel*survivorship(2); % stage transitional rate egg to larva
 
-survivorship(4:11) = (st2*min(1,max(0,1-0.15*(1-Indexpollen*IndexNursing))))^(1/8); %  LARVA 
+survivorship(4:11) = st2^(1/8); %  LARVA
+%(st2*min(1,max(0,1-0.15*(1-Indexpollen*IndexNursing))))^(1/8); %  LARVA 
 % st2: the time independent base mortality rate of larval stage at any age (4-11 days old- total 8 days)
 % Larvae are frequently cannibalized in a honeybee colony.
 % The rate of cannibalism depends on the age of the larvae (Schmickl and Crailsheim, 2001),
@@ -103,13 +104,14 @@ survivorship(26:27)=tpn*survivorship(25) ;
 % NURSE: who don't precociously forage (1-u) and who survive one day of 16 that make up st4
 %It will be varied by the nursing efforts. A higher nursing load will
 %cause a higher mortality of the nurse bee stage.
-survivorship(27:42)= (1-u)*(st4*min(1,1-Indexpollen-Indexhoney))^(1/16) ;
+survivorship(27:42) = (1-u)*st4^(1/16);
+%(1-u)*(st4*max(0,min(1,1-Indexpollen-Indexhoney)))^(1/16) ;
 
 %stage transition rate NURSE to HOUSE bee
 survivorship(42:43)=tnh*survivorship(41) ;
 
 %survivorship of HOUSE bee
-survivorship(43:48)= (st5*min(1,1-Indexhoney))^(1/6);
+survivorship(43:48)= st5^(1/6);%(st5*min(1,1-Indexhoney))^(1/6);
 
 survivorship(48:49)=thf*survivorship(47);
 
@@ -153,8 +155,8 @@ honeyeaten= min([Ht HoneyDemand]);
 vacated = Nt(26) + foodeaten + honeyeaten;
 Vt = Vt + vacated + scavanged ;
 %Actual eggs layed by queen this day determined here
-if stage(4)+stage(5)+stage(6)<= 0 % the minimum requirement of number of bees needed to be around a queen bee
-    disp('HIVE DEAD, no adult bees left')
+if stage(4)+stage(5)+stage(6)<= 100 % the minimum requirement of number of bees needed to be around a queen bee
+    disp('HIVE DEAD, leq 100 adult bees left')
     R=0;
 else 
     % The actual egg production per day depends on the queen egg laying potential, 
@@ -221,7 +223,7 @@ if stage(6) <= 1
     predictedhoney=0;    
 else
     %volume ratio of honey/nectar = 0.4
-    predictedhoney = 0.4 * interp2(REAL(hsurfX,hsurfY,hsurf,0.8*stage(5),stage(6)-PollenForager));
+    predictedhoney = 0.4 *10000;% interp2(REAL(hsurfX,hsurfY,hsurf,0.8*stage(5),stage(6)-PollenForager));
         if predictedhoney == 0
             disp('interp function said no honey')
         end
@@ -233,10 +235,13 @@ storedhoney = max( 0, min(predictedhoney, Vt));
     
 %UPDATE VACANT CELL COUNT
 Vt = Vt - storedhoney ;
-    if Vt == 0
-            disp('ran out of space after honey stored')
-            disp(date)
-    end
+%     if Vt == 0
+%             disp('ran out of space after honey stored')
+%             disp(date)
+               %This isn't tecnically an issue, since the eggs emerging in
+               %the next stage should make more room... but it shouldn't
+               %really  happen
+%     end
    
 %% Pollen, Honey, Cells net input 
 Pt = Pt - foodeaten + storedfood;
@@ -247,6 +252,6 @@ Vt1 = Vt; % Vacant cells at end of the day - gets updated throughout file
 R;
 Nt1(1) = R; %R; %number of eggs laid today, these are now the age zero eggs
 
-nextstate = [Vt1; Pt1; Ht1; R; Nt1] ;
+nextstate = [Vt1; Pt1; Ht1; R; Nt1]
 
 return
