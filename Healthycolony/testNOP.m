@@ -1,189 +1,110 @@
-%nrm = [1/3,1/8,1/15,1/16,1/6,1/12]'; % normalize frequencies for each
-%stage
-
 % First Season Summer Dynamics 
-%function  H3 = testNOP(surX) 
+
 agemax = 60; % +1 because of matlab indexing
 global qh st1 st2 st3 st4 st5 st6;
-global FactorBroodNurse u v rt foragingsuccess Q nt; 
- global hsurfX hsurfY hsurf V0;
- global a1 a2 a3 a4 a5 a6 h1 h2 h3 h4 h5 h6; %%%cosumption rate of honey and pollen  for each stage of bees 
- global tel tlp tpn tnh thf;
- %BRM=[0 0.2 0.4 0.6 0.8 1 2 4 5 6 ];
- %%%%%Parameter 
-%Pamx=[st1 st2 st3 mt4 st5 st6];
-% % 
-% st1=surX(1);st2=surX(2);st3=surX(3);
-% st4=surX(4);
-% st5=surX(5);st6=surX(6); qh=surX(7);
-% tel=surX(8);
-% tlp=surX(9);
-% tpn=surX(10);
-% tnh=surX(11);
-% thf=surX(12);
-% u=surX(13)-0.98;v=surX(14)-0.98;rt=surX(15)-0.98;FactorBroodNurse=4*surX(16);
-% %u=surX(7);v=surX(8)/10;rt=surX(9)/10;FactorBroodNurse=8*surX(10)
-% % % 
-% u=surX(1);
-% v=surX(2);
-% u=0.0000000000000000;%precocious prob
-u=0.;
- v=0.00000;% reversed prob. between foragers and house bees;
- FactorBroodNurse=3; % One nurse bee can heat 2.65 brood cells 
- rt=0;
- qh=1;
-%h1=0.12; % fraction of a cell's honey consumed by a bee in one day, a cellful of honey weighs~~0.5g
-%h1=0;
-h1=0.0;
-% h2=0.012;
-h2=0; 
-% h3=0;
-% %h4=0.1;
-% %h4=0.036; 
-% %h4=0.042;
-% h4=0.042;
-% h5=0.042;
-% %h5=0.036;
-% %h6=0.09; 
-% % h6=0.1;
-% h1=0.0186;
-% h2=0.0186;
-%h2=0;
-%h4=0.0525;
-%h4=0.0525;
-h4=0.0525;
-h5=0.045;
-% h4=0.1;
-% h5=0.1;
-h6=0.136;
-%h6=0.136;
-%h6=0.1;
+global FactorBroodNurse u v rt; 
+global a1 a2 a3 a4 a5 a6 h1 h2 h3 h4 h5 h6;
+global tel tlp tpn tnh thf;
+global V0;
+
+u = 0; % probability of individual nurse bee precociously developing to forager
+v = 0; % reversed prob. between foragers and house bees;
+FactorBroodNurse = 3 ; % One nurse bee can heat 2.65 brood cells - NOT CRUCIAL.. but probably closer to 5
+rt = 0; %probability of individual bee retardant developing to next age class
+qh = 1; %probability of ..? downregulation of queen egg laying of some sort
+
+%Honey consumption rates
+% fraction of a cell's honey consumed by a bee in one day, a cellful of honey weighs~~0.5g
+h1 = 0.0; %h1=0.12; 
+h2 = 0; % h2=0.012; 
+h3 = 0;
+h4 = 0.0525; % h4=0.1;
+h5 = 0.045; % h5=0.1;
+h6 = 0.136; % h6 = 0.1;
+
+%Pollen consumption rates
+%a cellful of pollen weighs~~0.23g
+a1 = 0; % eggs don't consume pollen?
+a2 = 0.0047;% fraction of a cell's pollen consumed by a larva in one day
+a3 = 0; %capped brood don't consume pollen from stores
+a4 = 0.0283;% fraction of a cell's pollen consumed by a nurse bee in one day
+a5 = 0.017; % fraction of a cell's pollen removed by a house bee in one day
+a6 = 0; %foragers don't consume pollen
+
+% survivorship rates
+% rates here do not agree with "best estimate" rates listed in chapter of
+% thesis pg 96
+% claim: rates are from Sakagami and Fukuda 1968 and Winston 1981
+
+%these are very low... not sure why they are here. The other ones yield
+%closer results to those shown in paper
+% st1 = 0.5;  % survivorship for egg stage 
+% st2 = 0.5;  % survivorship for larval stage 
+% st3 = 0.86; % survivorship for pupa stage
+% st4 = 0.85; % survivorship for nurse bee stage 
+% st5 = 0.88; % survivorship for house bee stage 
+% st6 = 0.78; % survivorship for forager bee stage
+
+st1 = 0.95;%0.5; % st1=0.86; % 0.86--survivorship for egg stage 
+st2 = 0.98;%0.5; % st2= 0.85; %---survivorship for larval stage 
+st3 = 0.99;%0.86; % suvivorship for -- survivorship for pupa stage
+st4 = 0.99;%0.85; % 0.99-85%--survivorship for nurse bee stage 
+st5 = 0.96;%0.88; % 0.96-88.6%--survivorship for house bee stage 
+st6 = 0.90;%0.78; % 78.5%--survivorship for forager bee stage
 
 
+tel = 1; %through-stage survival for egg maturing to 1st instar larva
+tlp = 1; %through-stage survival for larva maturaing to pupa
+tpn = 1; %through-stage survival for pupa maturing to nurse bee
+tnh = 1; %through stage survival for nurse bee maturing to house bee
+thf = 1; %through-stage survival for house been maturing to forager
 
-%a1 = .0; %  a cellful of pollen weighs~~0.23g
-%a2 = .005; % fraction of a cell's pollen consumed by a larva in one day
-%a1=0.0047;
-a1=0;
-a2=0.0047;
-a4=0.0283;
-a5=0;
-% a2=0.0283;
-% a3 = .0;
-% a4 = .0283; % fraction of a cell's pollen consumed by a nurse in one day
-%a5 = 0.017; % fraction of a cell's pollen removed by a house bee in one day
-% a6=.00;
-st2=0.5;
-st1=0.5;
-
-
-% st1=0.86; % 0.86--survivorship for egg stage 
-% st2= 0.85; %---survivorship for larval stage 
-st3= 0.86;
-st4= 0.85; % 0.99-85%--survivorship for nurse bee stage 
-st5=0.88; % 0.96-88.6%--survivorship for house bee stage 
-st6=0.78; % 78.5%--survivorship for forager bee stage
-
-% theta = rt*ones(agemax-1,1); % theta = probabilities of development retardation
-%rt=0.0000000;
-
-%st4= 0.97; % 0.86--survivorship for egg stage 
-% st1=1;
-% st2=1;st3=1;st4=1;st5=1;st6=1;
-% st1= 0.97; % 0.86--survivorship for egg stage 
-% st2= 0.99; %---survivorship for larval stage 
-% st3= 0.999;
-% st4= 0.995; % 0.99-85%--survivorship for nurse bee stage 0.97-nurse bee threshold 
-% st5=0.995; % 0.96-88.6%--survivorship for house bee stage 
-% st6=0.965; % 78.5%--survivorship for forager bee stage
-%%Control survival
-% st1=(0.86)^(1/3); % 0.86--survivorship for egg stage 
-% st2= (0.85)^(1/7); %---survivorship for larval stage 
-% st3= (0.86)^(1/14);
-% st4= (0.85)^(1/16); % 0.99-85%--survivorship for nurse bee stage 
-% st5=(0.85)^(1/6); % 0.96-88.6%--survivorship for house bee stage 
-% st6=(0.78)^(1/12); % 78.5%--survivorship for forager bee stage
-% % % global tel tlp tpn tnh thf;
-%%max surivival
-% st1=(1)^(1/3); % 0.86--survivorship for egg stage 
-% st2= (1)^(1/7); %---survivorship for larval stage 
-% st3= (1)^(1/14);
-% st4= (1)^(1/16); % 0.99-85%--survivorship for nurse bee stage 
-% st5=(1)^(1/6); % 0.96-88.6%--survivorship for house bee stage 
-% st6=(1)^(1/12); % 78.5%--survivorship for forager bee stage
-
-%%%%Min survival
-% st1=(0.5)^(1/3); % 0.86--survivorship for egg stage 
-% st2= (0.5)^(1/7); %---survivorship for larval stage 
-% st3= (0.5)^(1/14);
-% st4= (0.5)^(1/16); % 0.99-85%--survivorship for nurse bee stage 
-% st5=(0.5)^(1/6); % 0.96-88.6%--survivorship for house bee stage 
-% st6=(0.5)^(1/12); % 78.5%--survivorship for forager bee stage
-tel=1;
-tlp=1;
-tpn=1;
-tnh=1;
-thf=1;
-% st1= 0.85^(1/3); % 0.86--survivorship for egg stage 
-% st2= 0.904^(1/8); %---survivorship for larval stage 
-% st3= 0.988^(1/15);
-% mt4= 1-0.976^(1/16); % 0.99-85%--survivorship for nurse bee stage 
-% st5=0.86^(1/6); % 0.96-88.6%--survivorship for house bee stage 
-% st6=0.78^(1/12); % 78.5%--survivorship for forager bee stage
-
-% %%%%Dimethoate Control 
-
-% st1=(0.85)^(1/3); % 0.86--survivorship for egg stage 
-% st2= (0.85)^(1/7); %---survivorship for larval stage 
-% st3= (0.86)^(1/14);
-% st4= (0.6)^(1/16); % 0.99-85%--survivorship for nurse bee stage 
-% st5=(0.85)^(1/6); % 0.96-88.6%--survivorship for house bee stage 
-% st6=(0.78)^(1/12); % 78.5%--survivorship for forager bee stage
-
-
-%%%%Fungicide Wax%%%%%%%%% the emergence levels of 1st instar larvae was
-%%%%reduced significantly. 
-% st1=(0.08)^(1/3); % 0.86--survivorship for egg stage 
-% st2= (0.85)^(1/7); %---survivorship for larval stage 
-% st3= (0.86)^(1/14);
-% st4= (0.85)^(1/16); % 0.99-85%--survivorship for nurse bee stage 
-% st5=(0.85)^(1/6); % 0.96-88.6%--survivorship for house bee stage 
-% st6=(0.78)^(1/12); % 78.5%--survivorship for forager bee stage
-
-%nt=0.1;
-
-   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
 G = zeros(6,agemax);
-tx=240;
+
+tx=240; % number of summer days of the year
+
 G(1,1:3)=1; G(2,4:11)=1; G(3,12:26)=1; G(4,27:42)=1;G(5,43:48)=1;G(6,49:agemax)=1;
 
-P0 = 1000;
+P0 = 200;
+%P0 = 1000; %initial cells of pollen
 
-V0 = 140000 - P0;
+V0 = 300000 - 200; %intial vacant cells, total number cells is 140000
+%subtract to leave room for eggs and pollen
 
-H0=0;
+H0=0; %initial  honey
 
-R0=0;
+R0=0; %initial ...? egg laying?
 
 N = zeros(agemax,1);
 
-N(1:3)=100;
+N(1:3)=100; %  initial number of eggs/3 days
+%SHOULD BE ZERO, BUT THIS CAUSES CODE TO CRASH WITH ERROR "DEAD HIVE
+% Undefined function or variable "storedhoney".
+% 
+% Error in bees (line 177)
+% Ht1= min(V0,Ht-honeyeaten+storedhoney); % The net honey storage
+% at the end of the day.
+% 
+% Error in testNOP (line 110)
+% 		     X = bees(X,t);  % call to bees.m function, which
+%              outputs new state of hive"
 
-N(4:11)=100;
+N(4:11)=200; % initial number of larva = 1600/8 days
 
-N(12:26)=300;
+N(12:26)=160; % initial number of pupa = 2400/15 days
 
-N(27:42)=200;
+N(27:42)=187; % initial number of nurse bees = 3000/16 days
 
-N(43:48)=200;
+N(43:48)=500; % initial number of house bees= 3000/ 6 days
 
-N(49:agemax)=200;
+N(49:agemax)=250; % initial number of forager bees = 3000 / 12 days
 
-X = [ V0; P0; H0;R0; N ];
+X = [ V0; P0; H0;R0; N ]; % This hold the initial bee populion that goes into bees.m
 
-res=zeros(6,tx);
+res=zeros(6,tx); % res will hold bee population by stage for each day of summer
 
-V=zeros(1,tx);
+V=zeros(1,tx); %vector will hold # vacant cells for each day of summer
 
 P=zeros(1,tx);
 
@@ -191,63 +112,50 @@ H=zeros(1,tx);
 
 R=zeros(1,tx);
 
-
-numyears =1;
+numyears = 2;
 summerdays = 240;
 yeardays = 360;
 
+%these super long vectors hold the vacant cells, pollen, honey, and egg
+%filled cells for every day of the years in our time series
 pop=zeros(6,yeardays*numyears);
 Vpop=zeros(1,yeardays*numyears);
 Ppop=zeros(1,yeardays*numyears);
 Hpop=zeros(1,yeardays*numyears);
 Rpop=zeros(1,yeardays*numyears);
 
+%each year starts with a field season, goes through one winter, and then
+%one more field season
+for T = 0:(numyears-1) %T tells us what year we are in 0,1, 2...
 
-%%pesticide application time for FPE study 
-startdate=0;
-enddate=0;
-
-for T = 0:(numyears-1)
-
-          for t=(yeardays*T+1):(yeardays*T+summerdays)
-
-
+          for t=(yeardays*T+1):(yeardays*T+summerdays) %sets the date, goes through all field season days
+   
+		     X = bees(X,t);  % call to bees.m function, which outputs new state of hive
               
-		     X = bees(X,t);
-
-		     res(1:6,t-yeardays*T)=G*X(5:end);
+             %G is 6 x agemax, and X = [V,P,H,R,N]
+		     res(1:6,t-yeardays*T)=G*X(5:end); 
  
 		     V(1,t-yeardays*T)= X(1);
 
-		     P(1,t-yeardays*T)= X(2);
+		     P(1,t-yeardays*T) = X(2);
         
              H(1,t-yeardays*T)= X(3);
 
 		     R(1,t-yeardays*T)= X(4);
  
-          end
+          end %END OF LOOP THROUGH THIS SUMMER
      
-%     pollen=P(1,yeardays*T+summerdays);
-%     
-%     Honey= H(1,yeardays*T+summerdays);
-    
 	pop(:,(yeardays*T+1):(yeardays*T+summerdays))=res;
     Vpop(:,(yeardays*T+1):(yeardays*T+summerdays))=V;
     Ppop(:,(yeardays*T+1):(yeardays*T+summerdays))=P;
     Hpop(:,(yeardays*T+1):(yeardays*T+summerdays))=H;
     Rpop(:,(yeardays*T+1):(yeardays*T+summerdays))=R;
-% 	
-%     if pop(4,(yeardays*T+1):(yeardays*T+summerdays))+pop(5,(yeardays*T+1):(yeardays*T+summerdays))<1000
-%         
-%           
-%          fprintf('colony collapse');
-%         break 
-%     else 
-%  
+    
+	
     
     % First Season Winter Dynamics 
 
-	agemaxwinter=150; 
+	agemaxwinter=150; %max life of winter bee
 
 	W = zeros(4,agemaxwinter);
 
@@ -255,24 +163,26 @@ for T = 0:(numyears-1)
 
 	N = zeros(agemaxwinter,1);
 
-	N(1:3)=res(1,summerdays)/3;
+	N(1:3) = res(1,summerdays)/3;
 
-	N(4:11)=res(2,summerdays)/8;
+	N(4:11) = res(2,summerdays)/8;
 
-	N(12:26)=res(3,summerdays)/15;
+	N(12:26) = res(3,summerdays)/15;
 
-	N(27:agemaxwinter)=(res(4,summerdays)+res(5,summerdays)+res(6,summerdays))/100;
+    N(27:agemax) = (res(4,summerdays)+res(5,summerdays)+res(6,summerdays))/34;
+    % this doesn't make sense- it's like artificially aging many of them.  
+	%N(27:agemaxwinter)=(res(4,summerdays)+res(5,summerdays)+res(6,summerdays))/124; 
 
 	P0 = P(1,summerdays);
 
-    V0 = V(1,summerdays);
+    V0 = V(1,summerdays); 
 
     H0 = H(1,summerdays);
 
     R0 = R(1,summerdays);
     
 
-    Y = [ V0; P0; H0;R0; N ];
+    Y = [ V0; P0; H0; R0; N ];
 
 	clear res V P H R;
 
@@ -287,22 +197,30 @@ for T = 0:(numyears-1)
     R=zeros(1,yeardays-summerdays);
     	
 
-	for t=(yeardays*T+summerdays+1):(yeardays*(T+1))
-
-		Y = winterbeesR(Y,t);
-
-		res(1:4,(t-(yeardays*T+summerdays)))=W*Y(5:end);
-      
-        V(1,(t-(yeardays*T+summerdays)))= Y(1);
-
-        P(1,(t-(yeardays*T+summerdays)))= Y(2);
-    
-        H(1,(t-(yeardays*T+summerdays)))= Y(3);
-
-        R(1,(t-(yeardays*T+summerdays)))= Y(4);
+    for t = (yeardays*T+summerdays+1):(yeardays*(T+1))
+        Y = winterbeesR(Y,t);
+        res(1:4,(t-(yeardays*T+summerdays)))=W*Y(5:end);
+        V(1,(t-(yeardays*T+summerdays))) = Y(1);
+        if Y(1)== 0
+            disp('ran out of space, on day:')
+            disp(t)
+            break
+        end
+        P(1,(t-(yeardays*T+summerdays))) = Y(2);
+        if Y(2) == 0
+            disp('Hive starved, no pollen, on day:')
+            disp(t)
+            break
+        end
+        H(1,(t-(yeardays*T+summerdays))) = Y(3);
         
-     
-    end 
+        if Y(3) == 0
+            disp('Hive staved, no honey, on day:')
+            disp(t)
+            break
+        end
+        R(1,(t-(yeardays*T+summerdays))) = Y(4);
+    end %END OF LOOP THROUGH WINTER
     
 	pop(:, (yeardays*T+summerdays+1):(yeardays*(T+1))) =res;
     
@@ -315,10 +233,6 @@ for T = 0:(numyears-1)
     Rpop (1,(yeardays*T+summerdays+1):(yeardays*(T+1)))= R;
     
         
-    
-%     
-%      
-           
 	%Second Season Summer Dynamics 
 
 	N = zeros(agemax,1);
@@ -354,144 +268,35 @@ for T = 0:(numyears-1)
 	P=zeros(1,summerdays);
 
     H= zeros(1,summerdays); 
-%     else 
-%          fprintf('colony collapse');
-%         break 
-%     end
-end 
-%NOP-normal operating point 
-% HoneystoreF1=Hpop(241);% First November-F1
-% AdultBeesF1=pop(4,241);
-% 
-% HoneystoreW1=Hpop(360);% First End of One season-Next Feb-W1
-% AdultBeesW1=pop(4,360);
-% 
-% HoneystoreF2=Hpop(601);% Second November-F2
-% AdultBeesF2=pop(4,601);
-% 
-% HoneystoreW2=Hpop(720);% Second End of One season-Second Feb-W2
-% AdultBeesW2=pop(4,720);
-% 
-% 
-% HoneystoreF3=Hpop(961);% Third November-F3
-% AdultBeesF3=pop(4,961);
-% 
-% HoneystoreW3=Hpop(1080);% Third End of One season-Second Feb-W2
-% AdultBeesW3=pop(4,1080);
-% 
-% ABRatio=(pop(4,1:360*numyears)+ pop(5,1:360*numyears)+pop(6,1:360*numyears))./(pop(1,1:360*numyears)+pop(2,1:360*numyears)+pop(3,1:360*numyears)); 
- BARatio=(pop(1,1:360*numyears)+pop(2,1:360*numyears))./(pop(4,1:360*numyears)+pop(5,1:360*numyears)); 
-%  %BARatio=(pop(1,1:360*numyears)+pop(2,1:360*numyears)+pop(3,1:360*numyears))./(pop(4,1:360*numyears)+ pop(5,1:360*numyears)+pop(6,1:360*numyears));
-% % %ELPARatio=(pop(1,1:360*numyears)+pop(2,1:360*numyears)+pop(3,1:360*numyears))./(pop(4,1:360*numyears)+ pop(5,1:360*numyears));
- FARatio=pop(6,1:360*numyears)./(pop(4,1:360*numyears)+pop(5,1:360*numyears));
 
- %BNy=[BARatio;FARatio];
- %BNy=BARatio';
-% save NOPAdultBeesF1.dat AdultBeesF1 -ascii
-% save NOPAdultBeesF2.dat AdultBeesF2 -ascii
-% save NOPAdultBeesF3.dat AdultBeesF3 -ascii
-% 
-% save NOPAdultBeesW1.dat AdultBeesW1 -ascii
-% save NOPAdultBeesW2.dat AdultBeesW2 -ascii
-% save NOPAdultBeesW3.dat AdultBeesW3 -ascii
-% 
-% 
-% save NOPHoneystoreW1.dat HoneystoreW1 -ascii
-% save NOPHoneystoreW2.dat HoneystoreW2 -ascii
-% save NOPHoneystoreW3.dat HoneystoreW3 -ascii
-% 
-% save NOPHoneystoreF1.dat HoneystoreF1 -ascii
-% save NOPHoneystoreF2.dat HoneystoreF2 -ascii
-% save NOPHoneystoreF3.dat HoneystoreF3 -ascii
-% 
-% load NOPAdultBeesF1.dat
-% load NOPAdultBeesF2.dat
-% load NOPAdultBeesF3.dat
-% load NOPAdultBeesW1.dat
-% load NOPAdultBeesW2.dat
-% load NOPAdultBeesW3.dat
-% 
-% 
-% load NOPHoneystoreW1.dat
-% load NOPHoneystoreW2.dat
-% load NOPHoneystoreW3.dat
-% load NOPHoneystoreF1.dat
-% load NOPHoneystoreF2.dat
-% load NOPHoneystoreF3.dat
+end %END OF LOOP THROUGH MULTIPLE YEARS
 
-% % 
- %figure(1);
- %figure;
+%for each day, this gives the ratio of eggs+larvae/nurse+house bees
+% BARatio=(pop(1,1:360*numyears)+pop(2,1:360*numyears))./(pop(4,1:360*numyears)+pop(5,1:360*numyears)); 
+%for each day, this gives the ratio of foragers/nurse+house bees
+% FARatio=pop(6,1:360*numyears)./(pop(4,1:360*numyears)+pop(5,1:360*numyears));
+
 YMatrix1=pop';
-A=Ppop;
-B=Hpop;
+A=Ppop; %pollen storage throughout all seaseons
+B=Hpop;  %honey storage throught all seasons
 % A=Ppop.*0.23/1000;
 % B=Hpop*0.5/1000;
 YMatrix2= [A;B]';
  Y3=Rpop;
 %Y3=pop(3)*0.1552/1000+pop(4)*0.2189/1000+pop(5)*0.2189/1000+A+B;
 createfigure1(YMatrix1, YMatrix2, Y3); 
+ % figure;
 
-%hold off;
-figure;
-
- plot(Y3);
-foundationweight = 50.2 * 453.6 /1000;
-
-Y1=(pop(2)+pop(3))*0.1552/1000+pop(4)*0.2189/1000+pop(5)*0.2189/1000+Ppop.*0.23/1000+Hpop*0.5/1000;
- plot(Y1(1:360));
-t=[0:30:360];months=['Jan';'Feb';'Mar';'Apr';'May';'Jun';'Jul';'Aug';'Sep';'Oct';'Nov';'Dec';];
-set(gca,'xtick',t)
-set(gca,'xticklabel',months)
-xlabel('Date')
-ylabel('Colony Weight')
-
-
-% figure;
-% Ypollen=A;
-%  plot(A(1:360));
+% plot(Y3);
+% foundationweight = 50.2 * 453.6 /1000;
+% 
+% Y1=(pop(2)+pop(3))*0.1552/1000+pop(4)*0.2189/1000+pop(5)*0.2189/1000+Ppop.*0.23/1000+Hpop*0.5/1000;
+% plot(Y1(1:360));
 % t=[0:30:360];months=['Jan';'Feb';'Mar';'Apr';'May';'Jun';'Jul';'Aug';'Sep';'Oct';'Nov';'Dec';];
 % set(gca,'xtick',t)
 % set(gca,'xticklabel',months)
 % xlabel('Date')
-% ylabel('Pollen Weight')
- %YMatrix1=[pop(1,:)+pop(2,:)+pop(3,:);pop(4,:)+pop(5,:)+pop(6,:)]';
-%  A=Ppop';
-%  B=Hpop';
-% % % %YMatrix2= [A;B]';
-%  BNy1=pop(4,:)+pop(5,:)+pop(6,:);
-% % %BNy1=pop(4,:)+pop(5,:)+pop(6,:)+pop(1,:)+pop(2,:)+pop(3,:);
-% % % 
-% Rd=zeros(1079,1);
-% for i=1:1079
-%     AD(i+1)=BNy1(i+1);
-%     AD(i)=BNy1(i);
-%     Rd(i)=log(AD(i+1))-log(AD(i));
-% end 
-% 
-% % N1=BNy1(1);
-% % N240=BNy1(240);
-% % N360=BNy1(360);
-% % N600=BNy1(600);
-% % N720=BNy1(720);
-% % N960=BNy1(960);
-% % %N1080=BNy1(1080);
-% % lamda1=(log(N240)-log(N1))/240;
-% % lamda2=(log(N600)-log(N360))/240;
-% % lamda3=(log(N960)-log(N720))/240;
-% % Nmax=max(BNy1);
-%BNy=BARatio(90)+FARatio(90);
+% ylabel('Colony Weight')
+
 BNy=(BARatio+FARatio)';
-% % P1=A(240);
-% % P2=A(600);
-% % P3=A(960);
-% % H1=B(240);
-% % H2=B(600);
-% % H3=B(960);
-% %BNy=BNy1(720);
-% %growthrate=
-% % %yeardays*T+summerdays
-% YMatrix2= A';
-% Y1=Rd';
-% createfigure1(YMatrix1, YMatrix2,Y1); 
-%return 
+
