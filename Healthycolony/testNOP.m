@@ -5,7 +5,7 @@ global qh st1 st2 st3 st4 st5 st6;
 global FactorBroodNurse u v rt; 
 global a1 a2 a3 a4 a5 a6 h1 h2 h3 h4 h5 h6;
 global tel tlp tpn tnh thf;
-global V0;
+
 
 u = 0; % probability of individual nurse bee precociously developing to forager
 v = 0; % reversed prob. between foragers and house bees;
@@ -30,20 +30,6 @@ a3 = 0; %capped brood don't consume pollen from stores
 a4 = 0.0283;% fraction of a cell's pollen consumed by a nurse bee in one day
 a5 = 0.017; % fraction of a cell's pollen removed by a house bee in one day
 a6 = 0; %foragers don't consume pollen
-
-% survivorship rates
-% rates here do not agree with "best estimate" rates listed in chapter of
-% thesis pg 96
-% claim: rates are from Sakagami and Fukuda 1968 and Winston 1981
-
-%these are very low... not sure why they are here. The other ones yield
-%closer results to those shown in paper
-% st1 = 0.5;  % survivorship for egg stage 
-% st2 = 0.5;  % survivorship for larval stage 
-% st3 = 0.86; % survivorship for pupa stage
-% st4 = 0.85; % survivorship for nurse bee stage 
-% st5 = 0.88; % survivorship for house bee stage 
-% st6 = 0.78; % survivorship for forager bee stage
 
 st1 = 0.95;%0.5; % st1=0.86; % 0.86--survivorship for egg stage 
 st2 = 0.98;%0.5; % st2= 0.85; %---survivorship for larval stage 
@@ -198,8 +184,13 @@ for T = 0:(numyears-1) %T tells us what year we are in 0,1, 2...
     	
 
     for t = (yeardays*T+summerdays+1):(yeardays*(T+1))
+        
         Y = winterbeesR(Y,t);
-        res(1:4,(t-(yeardays*T+summerdays)))=W*Y(5:end);
+        
+        wintpop = W*Y(5:end); %this is a 4xmaxagewinter matrix %this pieces causes second season crash- not just bad pic
+        res(1:3,(t-(yeardays*T+summerdays))) = wintpop(1:3);
+        res(5,(t-(yeardays*T+summerdays))) = wintpop(4);
+        
         V(1,(t-(yeardays*T+summerdays))) = Y(1);
         if Y(1)== 0
             disp('ran out of space, on day:')
@@ -243,11 +234,11 @@ for T = 0:(numyears-1) %T tells us what year we are in 0,1, 2...
 
 	N(12:26)=pop(3,yeardays*(T+1))/15;
 
-	N(27:42)= pop(4,yeardays*(T+1))/34;
+	N(27:42)= pop(5,yeardays*(T+1))/34;
 
-	N(43:48)= pop(4,yeardays*(T+1))/34 ;
+	N(43:48)= pop(5,yeardays*(T+1))/34 ;
 
-	N(49:agemax)=pop(4,yeardays*(T+1))/34;
+	N(49:agemax)=pop(5,yeardays*(T+1))/34;
 
 	P0 = Ppop(1,yeardays*(T+1));
 
@@ -297,6 +288,6 @@ createfigure1(YMatrix1, YMatrix2, Y3);
 % set(gca,'xticklabel',months)
 % xlabel('Date')
 % ylabel('Colony Weight')
-
-BNy=(BARatio+FARatio)';
+% 
+% BNy=(BARatio+FARatio)';
 
