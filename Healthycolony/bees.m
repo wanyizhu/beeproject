@@ -57,11 +57,10 @@ end
 
 % the level of the pollen stores in relation to the demand situation of the colony.
 %got rid of +1s in the denominators
-Indexpollen = max([0  min([1 Pt/(PollenDemand*Factorstore) ])] );%max(0,min(1,Pt/(PollenDemand*Factorstore)))
+Indexpollen = max([0  min([1 Pt/(PollenDemand*Factorstore + 1) ])] );%max(0,min(1,Pt/(PollenDemand*Factorstore)))
 Indexhoney = max([0 min([1 Ht/HoneyDemand])]); %max(0,min(1,Ht/(HoneyDemand)))
-
 %the level of the active nurse bees population in relation to the total nursing demand of all brood stages.
-IndexNursing = max(0,min(1,stage(4)/((stage(2)+stage(1))*FactorBroodNurse)));
+IndexNursing = max(0,min(1,stage(4)/((stage(2)+stage(1))*FactorBroodNurse+1)));
 
 
 %% Bee Dynamics : Everyone ages by one day
@@ -82,8 +81,7 @@ survivorship(1:3) = st1^(1/3); % the daily survival rate of egg stage at age(i=1
 
 survivorship(3:4) =tel*survivorship(2); % stage transitional rate egg to larva
 
-survivorship(4:11) = st2^(1/8); %  LARVA
-%(st2*min(1,max(0,1-0.15*(1-Indexpollen*IndexNursing))))^(1/8); %  LARVA 
+survivorship(4:11) = (st2*min(1,max(0,1-0.15*(1-Indexpollen*IndexNursing))))^(1/8); %  LARVA 
 % st2: the time independent base mortality rate of larval stage at any age (4-11 days old- total 8 days)
 % Larvae are frequently cannibalized in a honeybee colony.
 % The rate of cannibalism depends on the age of the larvae (Schmickl and Crailsheim, 2001),
