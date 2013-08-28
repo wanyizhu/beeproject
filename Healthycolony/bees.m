@@ -13,7 +13,7 @@ global tel tlp tpn tnh thf;
 global  FactorBroodNurse; % The brood rearing efficiency: the constant ratio of egg to nurse bees as signal for queen to decide the egg laying rate. 
 global u v rt; % The probability of precocious foraging (u), reversed behavior of foragers to in-hive behaviors(v), the delayed development of adult bees at each age(rt); 
 global a1 a2 a4 a5 h1 h2 h4 h5 h6; %%%cosumption rate of honey and pollen  for each stage of bees 
-global hsurfX hsurfY hsurf V0; % the interpolated surface of NectarODE and honeycollection 
+global hsurfX hsurfY hsurf; % the interpolated surface of NectarODE and honeycollection 
 
  %% Stage Structure for field season bees-normal cycle: nonlinearities.1=egg,2=larvae,3=pupae,4=nurse,5=house,6=forager
 s = zeros(6,agemax);
@@ -155,8 +155,8 @@ honeyeaten= min([Ht HoneyDemand]);
 vacated = Nt(26) + foodeaten + honeyeaten; %check this, maybe not Nt(26)- maybe Nt1(26)?
 Vt = Vt + vacated + scavanged ;
 %Actual eggs layed by queen this day determined here
-if (stage(4)+stage(5)+stage(6))<= 100 % the minimum requirement of number of bees needed to be around a queen bee
-    disp('HIVE COLLAPSED, leq 100 adult bees left')
+if (stage(4)+stage(5)+stage(6))<= 10 % the minimum requirement of number of bees needed to be around a queen bee
+    disp('HIVE COLLAPSED, leq 10 adult bees left')
     disp(date);
     R = 0;
 else 
@@ -205,7 +205,7 @@ PollenForager=max(stage(6)*0.01, min(NeedPollenForager,stage(6)*0.33)); %%THIS o
 
 % pollen storage depends on the available cells in the hive
 % and the foraging collection efficiency of the pollen forager---assumption for pollen foraging behavior
-storedfood = max([0 min([PollenForager*0.48 Vt/4])]);
+storedfood = max([0 min([PollenForager*0.48 Vt])]);
 
 %UPDATE VACANT CELL COUNT
 Vt = Vt - storedfood ;
@@ -248,7 +248,7 @@ Vt = Vt - storedhoney ;
 Pt = Pt - foodeaten + storedfood;
 Pt1 = max(0,Pt); % Updated pollen stores at end of day
 Ht1 = Ht - honeyeaten + storedhoney; % Updated honey stores at end of day, capped by total size of hive
-Vt1 = Vt % Vacant cells at end of the day - gets updated throughout file  
+Vt1 = Vt; % Vacant cells at end of the day - gets updated throughout file  
 Nt1(1) = R; %R; %number of eggs laid today, these are now the age zero eggs
 
 nextstate = [Vt1; Pt1; Ht1; R; Nt1];
