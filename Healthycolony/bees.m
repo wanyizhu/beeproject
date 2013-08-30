@@ -103,8 +103,8 @@ survivorship(26:27)=tpn*survivorship(25) ;
 %It will be varied by the nursing efforts. A higher nursing load will
 %cause a higher mortality of the nurse bee stage.
 survivorship(27:42) = (1-u)*st4^(1/16);
-%(1-u)*(st4*max(0,min(1,1-Indexpollen-Indexhoney)))^(1/16) ;
-
+% = (1-u)*(st4*max(0,min(1,1-IndexNursing)))^(1/16) ;
+% = (1-u)*max(0,(1-(1-st4)*IndexNurseload))^(1/16);
 %stage transition rate NURSE to HOUSE bee
 survivorship(42:43)=tnh*survivorship(41) ;
 
@@ -198,8 +198,8 @@ NeedPollenForager=PollenNeed/foragingsuccess;
 % make pollen foraging), even when there is almost no pollen need (personal
 % observation). The maximum number of pollen foragers is 33% of the current
 % cohort of foragers. 
-PollenForager=max(stage(6)*0.01, min(NeedPollenForager,stage(6)*0.33)); %%THIS one seems like the right one! with the 33% cap!
-%PollenForager=min(stage(6),max(stage(6)*0.01, NeedPollenForager));
+PollenForager=max(stage(6)*0.01, min(NeedPollenForager,stage(6)*.33)); %%THIS one seems like the right one! with the 33% cap!
+%PollenForager = max([stage(6)*0.01 min([NeedPollenForager stage(6)])]);
 
 % pollen storage depends on the available cells in the hive
 % and the foraging collection efficiency of the pollen forager---assumption for pollen foraging behavior
@@ -222,15 +222,22 @@ if stage(6) <= 1
     predictedhoney=0;    
 else
     %volume ratio of honey/nectar = 0.4
-    predictedhoney = 0.4*interp2(hsurfX,hsurfY,hsurf,0.8*stage(5),stage(6)-PollenForager);
+     predictedhoney = .04 * interp1(hsurfX,hsurf, stage(6)-PollenForager);
+     disp(predictedhoney)
+     
+     %this one causes crazy errors and discontinuites
+     %0.4*interp2(hsurfX,hsurfY,hsurf,0.8*stage(5),stage(6)-PollenForager);
+     
+     %this is the old, slow version
+%     initial=[0.8*stage(5),0.8*stage(5),1,0,0,stage(6)-PollenForager]';
+%     predictedhoney = honeycollection(initial);
         if predictedhoney == 0
             disp('interp function said no honey')
         end
 
 end
     
-storedhoney = min([predictedhoney (Vt/4)]);%max( 0, min(predictedhoney, Vt));
-
+storedhoney = min([predictedhoney Vt]);%max( 0, min(predictedhoney, Vt));
     
 %UPDATE VACANT CELL COUNT
 Vt = Vt - storedhoney ;
@@ -245,7 +252,7 @@ Vt = Vt - storedhoney ;
 %% Pollen, Honey, Cells net input 
 Pt = Pt - foodeaten + storedfood;
 Pt1 = max(0,Pt); % Updated pollen stores at end of day
-Ht1 = Ht - honeyeaten + storedhoney; % Updated honey stores at end of day, capped by total size of hive
+Ht1 = Ht -honeyeaten + storedhoney; % Updated honey stores at end of day, capped by total size of hive
 Vt1 = Vt; % Vacant cells at end of the day - gets updated throughout file  
 Nt1(1) = R; %R; %number of eggs laid today, these are now the age zero eggs
 
