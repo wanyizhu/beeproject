@@ -222,8 +222,8 @@ if stage(6) <= 1
     predictedhoney=0;    
 else
     %volume ratio of honey/nectar = 0.4
-     predictedhoney = .04 * interp1(hsurfX,hsurf, stage(6)-PollenForager);
-     disp(predictedhoney)
+     predictedhoney = .4 * interp1(hsurfX,hsurf, stage(6)-PollenForager);
+     %disp(predictedhoney)
      
      %this one causes crazy errors and discontinuites
      %0.4*interp2(hsurfX,hsurfY,hsurf,0.8*stage(5),stage(6)-PollenForager);
@@ -237,7 +237,7 @@ else
 
 end
     
-storedhoney = min([predictedhoney Vt]);%max( 0, min(predictedhoney, Vt));
+storedhoney = min([predictedhoney Vt]);
     
 %UPDATE VACANT CELL COUNT
 Vt = Vt - storedhoney ;
@@ -252,7 +252,7 @@ Vt = Vt - storedhoney ;
 %% Pollen, Honey, Cells net input 
 Pt = Pt - foodeaten + storedfood;
 Pt1 = max(0,Pt); % Updated pollen stores at end of day
-Ht1 = Ht -honeyeaten + storedhoney; % Updated honey stores at end of day, capped by total size of hive
+Ht1 = Ht - honeyeaten + storedhoney; % Updated honey stores at end of day, capped by total size of hive
 Vt1 = Vt; % Vacant cells at end of the day - gets updated throughout file  
 Nt1(1) = R; %R; %number of eggs laid today, these are now the age zero eggs
 
