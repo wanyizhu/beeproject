@@ -36,7 +36,7 @@ st2 = 0.923;%0.5; % st2= 0.85; %---survivorship for larval stage
 st3 = 0.985;%0.86; % suvivorship for -- survivorship for pupa stage
 st4 = 0.923;%0.85; % 0.99-85%--survivorship for nurse bee stage 
 st5 = 0.913;%0.88; % 0.96-88.6%--survivorship for house bee stage 
-st6 = 0.653;%0.78; % 78.5%--survivorship for forager bee stage
+st6 = 0.78; % 78.5%--survivorship for forager bee stage %0.653;%
 
 
 tel = 0.98; %through-stage survival for egg maturing to 1st instar larva
