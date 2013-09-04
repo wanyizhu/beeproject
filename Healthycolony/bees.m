@@ -102,7 +102,7 @@ survivorship(26:27)=tpn*survivorship(25) ;
 % NURSE: who don't precociously forage (1-u) and who survive one day of 16 that make up st4
 %It will be varied by the nursing efforts. A higher nursing load will
 %cause a higher mortality of the nurse bee stage.
-survivorship(27:42) = (1-u)*st4^(1/16);
+survivorship(27:42)= (1-u)*(st4*max(0,min(1,1-IndexNursing)))^(1/16) ; %= (1-u)*st4^(1/16);
 % = (1-u)*(st4*max(0,min(1,1-IndexNursing)))^(1/16) ;
 % = (1-u)*max(0,(1-(1-st4)*IndexNurseload))^(1/16);
 %stage transition rate NURSE to HOUSE bee
@@ -219,10 +219,11 @@ Vt = Vt - storedfood ;
  
 if stage(6) <= 1 
     disp('no foragers'); %I don't see why this is here... shouldn't house bees just take over this role?
+    disp(date);
     predictedhoney=0;    
 else
     %volume ratio of honey/nectar = 0.4
-     predictedhoney = .4 * interp1(hsurfX,hsurf, stage(6)-PollenForager);
+     predictedhoney = .4 * interp1(hsurfX,hsurf, stage(6)-PollenForager); 
      %disp(predictedhoney)
      
      %this one causes crazy errors and discontinuites
